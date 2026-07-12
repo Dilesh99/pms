@@ -10,6 +10,7 @@ import {
   Plus,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useSession } from "@/components/providers/session-provider";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge, type Tone } from "@/components/dashboard/status-badge";
@@ -47,6 +48,8 @@ const statusTone: Record<InvoiceStatus, Tone> = {
 
 export default function PaymentsPage() {
   const [list, setList] = useState<Invoice[]>(seed);
+  const { role } = useSession();
+  const isAdmin = role === "admin";
 
   const totals = useMemo(() => {
     const due = list.filter((i) => i.status !== "paid").reduce((s, i) => s + i.amount, 0);
@@ -65,7 +68,7 @@ export default function PaymentsPage() {
   return (
     <div>
       <PageHeader title="Payments" description="Review your invoices and settle bills securely online.">
-        <AddPaymentDialog onAdd={(inv) => setList((prev) => [inv, ...prev])} />
+        {!isAdmin && <AddPaymentDialog onAdd={(inv) => setList((prev) => [inv, ...prev])} />}
       </PageHeader>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
@@ -95,23 +98,25 @@ export default function PaymentsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Invoice</TableHead>
-                  <TableHead>Description</TableHead>
+                  {!isAdmin && <TableHead>Description</TableHead>}
                   <TableHead>Due date</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  {!isAdmin && <TableHead className="text-right">Action</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {list.map((inv) => (
                   <TableRow key={inv.id}>
                     <TableCell className="font-medium">{inv.id}</TableCell>
-                    <TableCell className="max-w-52 text-pretty">
-                      {inv.description}
-                      {inv.method && (
-                        <span className="block text-xs text-muted-foreground">Paid via {inv.method}</span>
-                      )}
-                    </TableCell>
+                    {!isAdmin && (
+                      <TableCell className="max-w-52 text-pretty">
+                        {inv.description}
+                        {inv.method && (
+                          <span className="block text-xs text-muted-foreground">Paid via {inv.method}</span>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {formatDate(inv.dueDate)}
                     </TableCell>
@@ -123,13 +128,15 @@ export default function PaymentsPage() {
                         {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
                       </StatusBadge>
                     </TableCell>
-                    <TableCell className="text-right">
-                      {inv.status === "paid" ? (
-                        <span className="text-sm text-muted-foreground">Paid</span>
-                      ) : (
-                        <PaymentDialog invoice={inv} onPay={payInvoice} />
-                      )}
-                    </TableCell>
+                    {!isAdmin && (
+                      <TableCell className="text-right">
+                        {inv.status === "paid" ? (
+                          <span className="text-sm text-muted-foreground">Paid</span>
+                        ) : (
+                          <PaymentDialog invoice={inv} onPay={payInvoice} />
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -147,18 +154,22 @@ export default function PaymentsPage() {
                     {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
                   </StatusBadge>
                 </div>
-                <div>
-                  <p className="text-sm">{inv.description}</p>
-                  {inv.method && (
-                    <span className="block text-xs text-muted-foreground mt-0.5">Paid via {inv.method}</span>
-                  )}
-                </div>
+                {!isAdmin && (
+                  <div>
+                    <p className="text-sm">{inv.description}</p>
+                    {inv.method && (
+                      <span className="block text-xs text-muted-foreground mt-0.5">Paid via {inv.method}</span>
+                    )}
+                  </div>
+                )}
                 <div className="flex items-center justify-between border-t pt-3 mt-1">
                   <p className="font-semibold text-lg">{currency(inv.amount)}</p>
-                  {inv.status === "paid" ? (
-                    <span className="text-sm font-medium text-muted-foreground">Paid</span>
-                  ) : (
-                    <PaymentDialog invoice={inv} onPay={payInvoice} />
+                  {!isAdmin && (
+                    inv.status === "paid" ? (
+                      <span className="text-sm font-medium text-muted-foreground">Paid</span>
+                    ) : (
+                      <PaymentDialog invoice={inv} onPay={payInvoice} />
+                    )
                   )}
                 </div>
               </div>
