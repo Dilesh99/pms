@@ -320,11 +320,11 @@ function AddRecordDialog({ onAdd }: { onAdd: (record: MedicalRecord) => void }) 
   
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+      <DialogTrigger render={
         <Button className="gap-2">
           <Plus className="size-4" /> Add Record
         </Button>
-      </DialogTrigger>
+      } />
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add Medical Record</DialogTitle>
