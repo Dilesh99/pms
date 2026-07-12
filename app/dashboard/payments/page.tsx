@@ -90,7 +90,7 @@ export default function PaymentsPage() {
           <CardDescription>All charges associated with your account.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -134,6 +134,35 @@ export default function PaymentsPage() {
                 ))}
               </TableBody>
             </Table>
+          </div>
+          <div className="md:hidden flex flex-col gap-4 mt-4">
+            {list.map((inv) => (
+              <div key={`mobile-${inv.id}`} className="flex flex-col gap-3 rounded-xl border p-4 shadow-sm bg-card">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <p className="font-semibold text-foreground">{inv.id}</p>
+                    <p className="text-sm text-muted-foreground">Due: {formatDate(inv.dueDate)}</p>
+                  </div>
+                  <StatusBadge tone={statusTone[inv.status]}>
+                    {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
+                  </StatusBadge>
+                </div>
+                <div>
+                  <p className="text-sm">{inv.description}</p>
+                  {inv.method && (
+                    <span className="block text-xs text-muted-foreground mt-0.5">Paid via {inv.method}</span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between border-t pt-3 mt-1">
+                  <p className="font-semibold text-lg">{currency(inv.amount)}</p>
+                  {inv.status === "paid" ? (
+                    <span className="text-sm font-medium text-muted-foreground">Paid</span>
+                  ) : (
+                    <PaymentDialog invoice={inv} onPay={payInvoice} />
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

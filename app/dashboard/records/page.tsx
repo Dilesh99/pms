@@ -132,7 +132,7 @@ export default function RecordsPage() {
               <p className="text-sm text-muted-foreground">Try adjusting your search or filter.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto p-5">
+            <div className="hidden md:block overflow-x-auto p-5 pb-0">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -171,6 +171,33 @@ export default function RecordsPage() {
                   })}
                 </TableBody>
               </Table>
+            </div>
+          )}
+          {filtered.length > 0 && (
+            <div className="md:hidden flex flex-col gap-4 p-4 border-t">
+              {filtered.map((r) => {
+                const meta = typeMeta[r.type];
+                return (
+                  <div key={`mobile-${r.id}`} className="flex flex-col gap-3 rounded-xl border p-4 shadow-sm bg-card">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <p className="font-semibold leading-none text-foreground">{r.title}</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(r.date)}</p>
+                      </div>
+                      <StatusBadge tone={meta.tone}>{r.type}</StatusBadge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Provider: {r.provider}</p>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="w-full mt-2"
+                      onClick={() => setSelectedRecord(r)}
+                    >
+                      <Eye className="mr-2 size-4 text-primary" /> View Details
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>
