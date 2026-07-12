@@ -157,7 +157,7 @@ function AppointmentCard({
               </StatusBadge>
             </div>
             <p className="text-sm text-muted-foreground">
-              {appt.specialty} &middot; {appt.department}
+              {appt.id} &middot; {appt.specialty} &middot; {appt.department}
             </p>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
@@ -565,7 +565,7 @@ function CalendarView({ appointments }: { appointments: Appointment[] }) {
           </div>
         </div>
         
-        <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg bg-border">
+        <div className="hidden md:grid grid-cols-7 gap-px overflow-hidden rounded-lg bg-border">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
             <div key={day} className="bg-muted p-2 text-center text-sm font-medium text-muted-foreground">
               {day}
@@ -599,10 +599,10 @@ function CalendarView({ appointments }: { appointments: Appointment[] }) {
                   {dayAppts.map((a) => (
                     <div 
                       key={a.id} 
-                      className="truncate rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary" 
+                      className="truncate rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"
                       title={`${a.time} - ${a.doctor}`}
                     >
-                      {a.time} {a.doctor.split(' ').pop()}
+                      {a.time}
                     </div>
                   ))}
                 </div>
@@ -610,8 +610,47 @@ function CalendarView({ appointments }: { appointments: Appointment[] }) {
             );
           })}
         </div>
+
+        {/* Mobile view: list of daily appointments */}
+        <div className="md:hidden mt-4 flex flex-col gap-4">
+          {days.map((day) => {
+            const dateStr = [
+              year,
+              String(month + 1).padStart(2, "0"),
+              String(day).padStart(2, "0"),
+            ].join("-");
+            
+            const dayAppts = appointments.filter((a) => a.date === dateStr && a.status !== "cancelled");
+            if (dayAppts.length === 0) return null;
+            
+            const dateObj = new Date(year, month, day);
+            const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+            
+            return (
+              <div key={`mobile-${day}`} className={cn("flex flex-col gap-2 rounded-xl border p-4 shadow-sm", isToday && "border-primary bg-primary/5")}>
+                <p className="font-semibold text-foreground">
+                  {dateObj.toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric' })}
+                  {isToday && <span className="ml-2 text-xs font-medium text-primary">Today</span>}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {dayAppts.map(a => (
+                    <div key={`mobile-${a.id}`} className="flex flex-col gap-1 rounded-lg bg-background p-3 border">
+                       <p className="text-sm font-semibold">{a.time}</p>
+                       <p className="text-xs text-muted-foreground">{a.doctor} &middot; {a.specialty}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+          {appointments.filter(a => {
+            const [y, m] = a.date.split("-").map(Number);
+            return y === year && (m - 1) === month && a.status !== "cancelled";
+          }).length === 0 && (
+            <p className="text-center text-sm text-muted-foreground py-8">No appointments this month.</p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 }
-

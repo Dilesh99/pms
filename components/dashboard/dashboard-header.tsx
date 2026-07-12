@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Check } from "lucide-react";
+import { Bell, Check, Menu } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/dashboard/user-menu";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 
 const TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -45,6 +45,7 @@ const notifications = [
 
 export function DashboardHeader() {
   const pathname = usePathname();
+  const { toggleSidebar } = useSidebar();
   const isRoot = pathname === "/dashboard";
   
   let title = TITLES[pathname];
@@ -56,7 +57,10 @@ export function DashboardHeader() {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/90 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/70 sm:px-4">
- <SidebarTrigger className="-ml-1 md:hidden" />
+      <Button variant="ghost" size="icon" className="-ml-1 md:hidden shrink-0" onClick={toggleSidebar}>
+        <Menu className="size-5" />
+        <span className="sr-only">Toggle Sidebar</span>
+      </Button>
       <Breadcrumb className="min-w-0 flex-1">
         <BreadcrumbList>
           

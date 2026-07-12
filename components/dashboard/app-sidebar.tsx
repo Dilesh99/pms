@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, StethoscopeIcon } from "lucide-react";
+import { LogOut, StethoscopeIcon, X } from "lucide-react";
 import { useSession } from "@/components/providers/session-provider";
 import { navForRole } from "@/lib/nav";
 import { BRAND, ROLE_LABELS } from "@/lib/data";
@@ -33,7 +33,16 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="bg-sidebar">
       {/* ── Header: logo + brand + role subtitle ── */}
-      <SidebarHeader className="items-center border-b border-border/60 pb-4 pt-5 group-data-[collapsible=icon]:pb-3 group-data-[collapsible=icon]:pt-4">
+      <SidebarHeader className="relative items-center border-b border-border/60 pb-4 pt-5 group-data-[collapsible=icon]:pb-3 group-data-[collapsible=icon]:pt-4">
+        {isMobile && (
+          <button
+            onClick={() => setOpenMobile(false)}
+            className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground md:hidden"
+            aria-label="Close sidebar"
+          >
+            <X className="size-5" />
+          </button>
+        )}
         <Link
           href="/dashboard"
           className="flex flex-col items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg group-data-[collapsible=icon]:flex-row group-data-[collapsible=icon]:gap-0"
