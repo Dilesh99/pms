@@ -35,6 +35,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
+        {/* Skip to main content – accessible only when focused via keyboard */}
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <DashboardHeader />
         <main id="main-content" className="flex-1 p-4 sm:p-6">
           <div className="mx-auto w-full max-w-6xl">{children}</div>

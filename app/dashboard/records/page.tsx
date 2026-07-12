@@ -104,6 +104,7 @@ export default function RecordsPage() {
               className="pl-8"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search medical records"
             />
           </div>
         </div>
@@ -132,8 +133,12 @@ export default function RecordsPage() {
               <p className="text-sm text-muted-foreground">Try adjusting your search or filter.</p>
             </div>
           ) : (
+            <>
+            <p className="sr-only" aria-live="polite" aria-atomic="true">
+              {filtered.length} record{filtered.length !== 1 ? "s" : ""} found.
+            </p>
             <div className="hidden md:block overflow-x-auto p-5 pb-0">
-              <Table>
+              <Table aria-label="Medical records table">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Date</TableHead>
@@ -172,6 +177,7 @@ export default function RecordsPage() {
                 </TableBody>
               </Table>
             </div>
+            </>
           )}
           {filtered.length > 0 && (
             <div className="md:hidden flex flex-col gap-4 p-4 border-t">

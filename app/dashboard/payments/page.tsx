@@ -91,7 +91,7 @@ export default function PaymentsPage() {
         </CardHeader>
         <CardContent>
           <div className="hidden md:block overflow-x-auto">
-            <Table>
+            <Table aria-label="Invoices and billing table">
               <TableHeader>
                 <TableRow>
                   <TableHead>Invoice</TableHead>

@@ -99,7 +99,7 @@ export default function AppointmentsPage() {
       </PageHeader>
 
       <Tabs defaultValue="calendar" className="w-full">
-        <TabsList className="w-full sm:w-auto">
+        <TabsList className="w-full sm:w-auto" aria-label="Appointment views">
           <TabsTrigger value="calendar">Calendar</TabsTrigger>
           <TabsTrigger value="upcoming">Upcoming ({grouped.upcoming.length})</TabsTrigger>
           <TabsTrigger value="completed">Past ({grouped.completed.length})</TabsTrigger>
@@ -111,7 +111,7 @@ export default function AppointmentsPage() {
             {grouped[key].length === 0 ? (
               <EmptyAppointments />
             ) : (
-              <ul className="grid gap-3">
+              <ul className="grid gap-3" aria-label={`${key} appointments, ${grouped[key].length} item${grouped[key].length !== 1 ? 's' : ''}`}>
                 {grouped[key].map((a) => (
                   <li key={a.id}>
                     <AppointmentCard appt={a} onCancel={cancelAppointment} />

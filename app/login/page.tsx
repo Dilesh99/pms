@@ -66,6 +66,7 @@ export default function LoginPage() {
   }
 
   return (
+    <main aria-label="Sign in page">
     <div className="login-page-wrapper">
       <div className="login-card">
         {/* Logo */}
@@ -77,7 +78,7 @@ export default function LoginPage() {
           <p className="login-tagline">Welcome back! Please login to your account.</p>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="login-form">
+        <form onSubmit={handleSubmit} noValidate className="login-form" aria-label="Login form">
           {/* Role selector */}
           <fieldset className="login-roles" aria-label="Select your role">
             <legend className="login-roles-legend">Sign in as</legend>
@@ -237,5 +238,6 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+    </main>
   );
 }

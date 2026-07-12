@@ -36,17 +36,17 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="flex min-w-0 flex-col">
         <header className="flex items-center justify-between p-4 sm:p-6">
           <Link
-            href="/"
+            href="/login"
             className="inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-            Back to home
+            Back to login
           </Link>
           <div className="flex items-center gap-3">
             <span className="lg:hidden">
               <Logo href="/" iconOnly />
             </span>
-            <ThemeToggle />
+           
           </div>
         </header>
 

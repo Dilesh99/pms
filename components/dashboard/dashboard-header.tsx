@@ -56,9 +56,20 @@ export function DashboardHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/90 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/70 sm:px-4">
-      <Button variant="ghost" size="icon" className="-ml-1 md:hidden shrink-0" onClick={toggleSidebar}>
-        <Menu className="size-5" />
+    <header
+      role="banner"
+      aria-label="Application header"
+      className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/90 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/70 sm:px-4"
+    >
+      <Button
+        variant="ghost"
+        size="icon"
+        className="-ml-1 md:hidden shrink-0"
+        onClick={toggleSidebar}
+        aria-label="Toggle navigation menu"
+        aria-controls="sidebar"
+      >
+        <Menu className="size-5" aria-hidden="true" />
         <span className="sr-only">Toggle Sidebar</span>
       </Button>
       <Breadcrumb className="min-w-0 flex-1">
@@ -97,10 +108,10 @@ export function DashboardHeader() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               {notifications.map((n) => (
-                <DropdownMenuItem key={n.title} className="flex-col items-start gap-0.5 py-2">
+                <DropdownMenuItem key={n.title} className="flex-col items-start gap-0.5 py-2" role="menuitem">
                   <span className="text-sm font-medium">{n.title}</span>
                   <span className="text-xs text-muted-foreground">{n.detail}</span>
-                  <span className="text-[11px] text-muted-foreground">{n.time}</span>
+                  <time className="text-[11px] text-muted-foreground" dateTime="">{n.time}</time>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuGroup>
