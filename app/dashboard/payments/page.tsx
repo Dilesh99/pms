@@ -341,6 +341,7 @@ function AddPaymentDialog({ onAdd }: { onAdd: (invoice: Invoice) => void }) {
       id: `INV-${Math.floor(1000 + Math.random() * 9000)}`,
       description: `Payment for appointment ${appointmentId} (${selectedAppt?.specialty})`,
       amount: amountVal,
+      date: new Date().toISOString().split("T")[0],
       dueDate: new Date().toISOString().split("T")[0],
       status: "paid",
       method: `Card •••• ${digits.slice(-4)}`,
