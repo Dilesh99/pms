@@ -1,0 +1,63 @@
+# CareBridge Screenshots Analysis
+
+This document provides a brief description and analysis of each screenshot in the Screenshots folder, focusing on design objectives, layout usability, accessibility, and role support.
+
+## 1. admin dashboard.png
+*   **Design objectives:** To provide hospital administrators with a high-level, real-time overview of operations, patient volume, revenue, and department capacity.
+*   **Usability:** A card-based layout for key performance indicators (KPIs) makes metrics easily scannable. Progress bars for department capacity visually communicate utilization rates at a glance without requiring the user to read raw numbers.
+*   **Accessibility:** High contrast between text and background colors (dark green on white) ensures readability. Clear, large typography is used for data points, and spacing prevents information density from becoming overwhelming.
+*   **Role support:** The sidebar explicitly shows an "Admin menu" with features like "Billing" and dashboard metrics (revenue, active staff) that are relevant only to administrative personnel, distinguishing it from clinical or patient views.
+
+## 2. appointment booking.png
+*   **Design objectives:** To enable patients to self-schedule appointments by selecting a department, provider, date, and time.
+*   **Usability:** A modal overlay keeps the user in the context of their schedule while focusing their attention on the booking task. A logical, top-to-bottom form flow and clear input fields reduce friction.
+*   **Accessibility:** Form fields are explicitly labeled, and required fields are marked with red asterisks. The active state for selection (e.g., "In-person") uses a high-contrast teal border and icon, aiding visual distinction.
+*   **Role support:** Tailored for the patient role, allowing self-service to reduce the administrative burden on hospital staff.
+
+## 3. appointments.png
+*   **Design objectives:** To help patients view and manage their upcoming, past, and cancelled visits in an organized manner.
+*   **Usability:** Segmented controls (Upcoming / Past / Cancelled) act as quick filters, keeping the main view uncluttered. Each appointment card provides clear "Cancel" actions and essential details.
+*   **Accessibility:** Important information (date, time, doctor) is prominent. Icons (calendar, clock, location/video) supplement text, aiding comprehension for users with cognitive disabilities or those scanning quickly.
+*   **Role support:** The interface displays the "Patient menu" and focuses entirely on the individual's schedule, giving them agency over their healthcare timeline.
+
+## 4. lab reports.png
+*   **Design objectives:** To present laboratory results clearly and indicate their current processing status (Ready, Pending, In progress).
+*   **Usability:** A card layout effectively separates distinct reports. Status badges and contextual alerts (e.g., "1 value outside range") immediately inform the user of the report's significance before they even open it.
+*   **Accessibility:** Status badges use both color-coding (green, blue, orange) and text labels, ensuring that color-blind users can fully understand the status of their reports. 
+*   **Role support:** Empowers patients to access their health data directly, fostering transparency and reducing anxiety while waiting for doctor communications.
+
+## 5. login.png
+*   **Design objectives:** To provide a secure, welcoming, and straightforward authentication entry point into the portal.
+*   **Usability:** A split-screen layout places a reassuring value proposition on the left and a clean, centered login form on the right, reducing visual noise.
+*   **Accessibility:** Features like a "Remember me" checkbox, a password visibility toggle (eye icon), and clear input labels improve usability for a wide range of users. The primary "Sign in" button has high contrast.
+*   **Role support:** Radio buttons at the top of the form explicitly allow users to select their role (Patient, Doctor, Admin) prior to logging in, streamlining the routing process.
+
+## 6. medical records.png
+*   **Design objectives:** To present a comprehensive, chronological history of a patient's medical visits and records in one secure location.
+*   **Usability:** An accordion-style layout allows users to view a summary list and expand individual records for details, preventing information overload. Search and filter tools help locate specific documents quickly.
+*   **Accessibility:** Clear headings, distinct borders for each record, and pill-shaped category tags (Consultation, Diagnosis, Vaccination) create a strong visual hierarchy that is easy to navigate.
+*   **Role support:** Provides patients with complete visibility into their medical history, empowering them to take an active role in their healthcare management.
+
+## 7. patient dashboard.png
+*   **Design objectives:** To act as a central hub for patients, offering a quick summary of their actionable items (appointments, prescriptions, lab results, bills) and recent health metrics.
+*   **Usability:** "Quick actions" buttons are prominently grouped to facilitate common tasks. Summary cards at the top draw attention to items requiring immediate action or review.
+*   **Accessibility:** Large, readable typography for key metrics (like blood pressure and BMI) and a clean interface with ample whitespace reduce cognitive load for users.
+*   **Role support:** Specifically tailored for the "Patient" role, the dashboard prioritizes personal health data and self-service actions over administrative or clinical workflows.
+
+## 8. patient registration.png
+*   **Design objectives:** To facilitate smooth onboarding for new patients via a comprehensive, structured registration form.
+*   **Usability:** The form is logically chunked into sections (Personal information, Contact details, Account security). A two-column layout for related short fields (e.g., First name / Last name) optimizes screen space.
+*   **Accessibility:** All fields have clear labels and asterisks for mandatory items. Password confirmation and visibility toggles help prevent input errors, which is crucial for accessibility.
+*   **Role support:** Designed specifically for unregistered users transitioning into the "Patient" role, guiding them step-by-step through necessary data collection.
+
+## 9. payments.png
+*   **Design objectives:** To allow users to securely review their invoices and complete online payments.
+*   **Usability:** The payment modal is overlaid directly on the invoices list, maintaining context. The form asks for standard payment information in a familiar layout, and a clear message indicates it's a secure transaction.
+*   **Accessibility:** The modal focuses the user's attention on the payment task. The primary action button explicitly states the exact amount to be paid (e.g., "Pay $180.00"), reducing anxiety and potential errors.
+*   **Role support:** Enables patients to independently handle the financial responsibilities associated with their healthcare.
+
+## 10. prescription.png
+*   **Design objectives:** To display a patient's medication history (active, completed, expired) and provide an easy way to request refills.
+*   **Usability:** Segmented controls filter medications by status. Active prescription cards clearly display the medication name, dosage, instructions, and remaining refills, alongside a prominent "Request refill" button.
+*   **Accessibility:** Critical instructions (e.g., "Take with water") are highlighted with a distinct background and an info icon to ensure they are not missed. Large text is used for medication names to aid readability.
+*   **Role support:** Directly supports the patient's need to manage ongoing treatments and interact asynchronously with their care providers or pharmacy for refills.
