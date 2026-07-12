@@ -84,7 +84,7 @@ const navByRole: Record<Role, NavItem[]> = {
     // prescriptions,
     // labReports,
     { ...payments, title: "Billing", description: "Billing and revenue" },
-    profile,
+    //profile,
   ],
 };
 

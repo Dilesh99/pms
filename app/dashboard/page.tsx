@@ -464,7 +464,7 @@ function AdminHome() {
         <StatCard label="Bed occupancy"       value={`${adminStats.bedOccupancy}%`}           icon={BedDouble}    hint="Hospital-wide" />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-1">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><TrendingUp className="size-4 text-primary" /> Monthly revenue</CardTitle>
@@ -482,7 +482,7 @@ function AdminHome() {
                       grid: { color: "#f3f4f6" },
                       ticks: {
                         font: { size: 11 },
-                        callback: (v: string | number) => `$${(Number(v) / 1000).toFixed(0)}k`,
+                        callback: (v: string | number) => `LKR${(Number(v) / 1000).toFixed(0)}k`,
                       },
                     },
                   },
@@ -492,17 +492,7 @@ function AdminHome() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><CalendarClock className="size-4 text-primary" /> Daily appointments</CardTitle>
-            <CardDescription>Number of appointments per month.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-56">
-              <Bar data={appointmentsData} options={baseOptions} />
-            </div>
-          </CardContent>
-        </Card>
+        
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -540,8 +530,19 @@ function AdminHome() {
             </ul>
           </CardContent>
         </Card>
-
         <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><CalendarClock className="size-4 text-primary" /> Daily appointments (last 6 months)</CardTitle>
+            <CardDescription>Number of appointments per last 6 months.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-56">
+              <Bar data={appointmentsData} options={baseOptions} />
+            </div>
+          </CardContent>
+        </Card>
+
+       {/*} <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Users className="size-4 text-primary" /> Staff by department</CardTitle>
             <CardDescription>Doctors vs nurses per department.</CardDescription>
@@ -564,7 +565,7 @@ function AdminHome() {
               />
             </div>
           </CardContent>
-        </Card>
+        </Card>*/}
       </div>
 
       <Card>
@@ -572,7 +573,7 @@ function AdminHome() {
           <CardTitle className="flex items-center gap-2"><Activity className="size-4 text-primary" /> Recent system activity</CardTitle>
           <CardDescription>Latest events across the practice.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <CardContent className="grid gap-3 sm:grid-cols-1 lg:grid-cols-1">
           {[
             { icon: Users,        color: "bg-primary/10 text-primary",     label: "New patient registered",   detail: "ID: P-2481 - 2m ago" },
             { icon: CalendarDays, color: "bg-sky-100 text-sky-600",         label: "Appointment confirmed",    detail: "Dr. Rahman - 8m ago" },

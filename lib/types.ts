@@ -22,6 +22,7 @@ export interface Appointment {
   status: AppointmentStatus;
   mode: "In-person" | "Video";
   reason: string;
+  patientName?: string;
 }
 
 export interface MedicalRecord {
@@ -33,6 +34,7 @@ export interface MedicalRecord {
   date: string;
   summary: string;
   details: string[];
+  patientName?: string;
 }
 
 export type PrescriptionStatus = "active" | "completed" | "expired";

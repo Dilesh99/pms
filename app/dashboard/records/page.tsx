@@ -11,7 +11,9 @@ import {
   Stethoscope,
   Syringe,
   UserRound,
+  Plus,
 } from "lucide-react";
+import { useSession } from "@/components/providers/session-provider";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatusBadge, type Tone } from "@/components/dashboard/status-badge";
@@ -40,6 +42,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { formatDate, medicalRecords } from "@/lib/data";
 import type { MedicalRecord } from "@/lib/types";
@@ -55,13 +59,17 @@ const typeMeta: Record<MedicalRecord["type"], { tone: Tone; icon: typeof FileTex
 const TYPES = ["all", "Consultation", "Diagnosis", "Vaccination", "Vitals"] as const;
 
 export default function RecordsPage() {
+  const { role } = useSession();
+  const isAdmin = role === "admin";
+  
+  const [list, setList] = useState<MedicalRecord[]>(medicalRecords);
   const [query, setQuery] = useState("");
   const [type, setType] = useState<(typeof TYPES)[number]>("all");
   const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return medicalRecords.filter((r) => {
+    return list.filter((r) => {
       const matchesType = type === "all" || r.type === type;
       const matchesQuery =
         !q ||
@@ -78,7 +86,7 @@ export default function RecordsPage() {
         title="Medical Records"
         description="Your electronic health records from every visit, in one secure place."
       >
-        
+        {isAdmin && <AddRecordDialog onAdd={(rec) => setList((prev) => [rec, ...prev])} />}
       </PageHeader>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -234,5 +242,109 @@ export default function RecordsPage() {
         )}
       </Dialog>
     </div>
+  );
+}
+
+function AddRecordDialog({ onAdd }: { onAdd: (record: MedicalRecord) => void }) {
+  const [open, setOpen] = useState(false);
+  const [patientName, setPatientName] = useState("");
+  const [title, setTitle] = useState("");
+  const [type, setType] = useState<MedicalRecord["type"]>("Consultation");
+  const [provider, setProvider] = useState("");
+  const [department, setDepartment] = useState("");
+  const [summary, setSummary] = useState("");
+  
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!patientName || !title || !provider || !department || !summary) {
+      toast.error("Please fill out all required fields.");
+      return;
+    }
+    
+    const newRecord: MedicalRecord = {
+      id: `REC-${Math.floor(1000 + Math.random() * 9000)}`,
+      title,
+      type,
+      provider,
+      department,
+      date: new Date().toISOString().split("T")[0],
+      summary,
+      details: ["Added manually by admin"],
+      patientName,
+    };
+    
+    onAdd(newRecord);
+    toast.success("Medical record added successfully!");
+    setOpen(false);
+    
+    setPatientName("");
+    setTitle("");
+    setType("Consultation");
+    setProvider("");
+    setDepartment("");
+    setSummary("");
+  }
+  
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <Plus className="size-4" /> Add Record
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Add Medical Record</DialogTitle>
+          <DialogDescription>
+            Create a new medical record for a specific patient.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="patientName">Patient Name</Label>
+            <Input id="patientName" placeholder="E.g., Amara Perez" value={patientName} onChange={(e) => setPatientName(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="title">Title</Label>
+            <Input id="title" placeholder="Record Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="type">Type</Label>
+            <Select value={type} onValueChange={(v: any) => setType(v)}>
+              <SelectTrigger id="type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TYPES.filter(t => t !== "all").map(t => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="provider">Provider</Label>
+              <Input id="provider" placeholder="Dr. Name" value={provider} onChange={(e) => setProvider(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="department">Department</Label>
+              <Input id="department" placeholder="Department" value={department} onChange={(e) => setDepartment(e.target.value)} required />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="summary">Summary</Label>
+            <Input id="summary" placeholder="Brief summary..." value={summary} onChange={(e) => setSummary(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="attachment">Attachment (Optional)</Label>
+            <Input id="attachment" type="file" className="cursor-pointer" />
+          </div>
+          <DialogFooter className="pt-2 flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button type="submit">Save Record</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -12,8 +12,10 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useSession } from "@/components/providers/session-provider";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatusBadge, type Tone } from "@/components/dashboard/status-badge";
@@ -240,7 +242,7 @@ function EmptyAppointments() {
 
 /* ── Booking dialog ───────────────────────────────────────────── */
 
-type BookingErrors = Partial<Record<"department" | "doctor" | "date" | "time" | "reason", string>>;
+type BookingErrors = Partial<Record<"department" | "doctor" | "date" | "time" | "reason" | "patientName", string>>;
 
 const DEPT_OPTIONS = DEPARTMENTS.map((d) => ({ value: d, label: d }));
 const DOCTOR_OPTIONS = DOCTORS.map((d) => ({
@@ -286,6 +288,10 @@ function getAvailableSlots(selectedDate: string, appointments: Appointment[]) {
 }
 
 function BookingDialog({ onBook, appointments }: { onBook: (a: Appointment) => void; appointments: Appointment[] }) {
+  const { role } = useSession();
+  const isAdmin = role === "admin";
+  
+  const [patientName, setPatientName] = useState("");
   const [department, setDepartment] = useState("");
   const [doctor, setDoctor]         = useState("");
   const [date, setDate]             = useState("");
@@ -299,6 +305,7 @@ function BookingDialog({ onBook, appointments }: { onBook: (a: Appointment) => v
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const next: BookingErrors = {
+      patientName: isAdmin && !patientName ? "Please enter a patient name." : undefined,
       department: department ? undefined : "Please choose a department.",
       doctor:     doctor     ? undefined : "Please choose a doctor.",
       date:       validators.required(date, "Date"),
@@ -321,6 +328,7 @@ function BookingDialog({ onBook, appointments }: { onBook: (a: Appointment) => v
       mode,
       status: "upcoming",
       reason,
+      patientName: isAdmin ? patientName : undefined,
     });
   }
 
@@ -345,6 +353,27 @@ function BookingDialog({ onBook, appointments }: { onBook: (a: Appointment) => v
       </DialogHeader>
 
       <form onSubmit={submit} noValidate className="space-y-6 pt-2">
+
+        {/* ── Section 0: Patient (Admin only) ── */}
+        {isAdmin && (
+          <section>
+            <div className="mb-3 flex items-center gap-2">
+              <UserPlus className="size-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Patient Information</h3>
+              <div className="flex-1 border-t border-border/60" />
+            </div>
+            <Field name="patientName" label="Patient Name" error={errors.patientName} required>
+              {(p) => (
+                <Input
+                  {...p}
+                  placeholder="E.g., Amara Perez"
+                  value={patientName}
+                  onChange={(e) => { setPatientName(e.target.value); clearError("patientName"); }}
+                />
+              )}
+            </Field>
+          </section>
+        )}
 
         {/* ── Section 1: Provider ── */}
         <section>
