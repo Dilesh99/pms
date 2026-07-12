@@ -91,7 +91,7 @@ export default function LoginPage() {
                     key={opt.value}
                     type="button"
                     onClick={() => setRole(opt.value)}
-                    className={cn("login-role-btn", active && "login-role-btn--active")}
+                    className={cn("login-role-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-white", active && "login-role-btn--active")}
                     aria-pressed={active}
                     aria-label={`Sign in as ${opt.label}`}
                   >
@@ -183,7 +183,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
-                className="login-pw-toggle"
+                className="login-pw-toggle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 rounded-md"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (

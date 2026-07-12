@@ -138,23 +138,13 @@
     @apply font-sans;
     scroll-behavior: smooth;
   }
-  /* WCAG 2.1 AA: Visible focus indicator for keyboard users */
+  /* WCAG 2.1 AA – strong, visible focus ring for ALL keyboard-focusable elements */
   :focus-visible {
     outline: 2px solid var(--ring);
-    outline-offset: 2px;
-    border-radius: 2px;
+    outline-offset: 3px;
+    border-radius: 4px;
   }
-  /* WCAG 2.5.5 – minimum 44x44px touch/click target for interactive elements */
-  button:not([class*="size-"]):not([class*="p-"]),
-  [role="button"]:not([class*="size-"]) {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  /* Remove focus outline for mouse users but keep for keyboard */
-  :focus:not(:focus-visible) {
-    outline: none;
-  }
-  /* Ensure images / icons have explicit sizing to avoid layout shift */
+  /* Ensure images/icons don't overflow containers */
   img, svg {
     max-width: 100%;
   }

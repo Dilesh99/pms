@@ -37,7 +37,7 @@ export function AppSidebar() {
         {isMobile && (
           <button
             onClick={() => setOpenMobile(false)}
-            className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground md:hidden"
+            className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
             aria-label="Close sidebar"
           >
             <X className="size-5" />
@@ -88,11 +88,11 @@ export function AppSidebar() {
                     aria-label={item.description}
                     aria-current={isActive ? "page" : undefined}
                     title={item.title}
-                     className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-all duration-200 ${
-                            isActive
-                              ? "bg-emerald-100 text-emerald-700 border-l-4 border-emerald-500 shadow-sm"
-                              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                          }`}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
+                          isActive
+                            ? "bg-emerald-100 text-emerald-700 border-l-4 border-emerald-500 shadow-sm"
+                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                        }`}
                   >
                     <item.icon
                       className={cn(
@@ -120,7 +120,7 @@ export function AppSidebar() {
           className={cn(
             "flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all duration-150",
             "bg-primary hover:bg-primary/90 active:scale-[0.98] shadow-md shadow-primary/30",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar",
             // collapsed: icon only, square
             "group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:rounded-lg group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:p-0",
           )}
