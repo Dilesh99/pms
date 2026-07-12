@@ -45,18 +45,21 @@ const notifications = [
 
 export function DashboardHeader() {
   const pathname = usePathname();
-  const title = TITLES[pathname] ?? "Dashboard";
   const isRoot = pathname === "/dashboard";
+  
+  let title = TITLES[pathname];
+  if (!title) {
+    const segments = pathname.split("/").filter(Boolean);
+    const last = segments[segments.length - 1] || "Dashboard";
+    title = last.charAt(0).toUpperCase() + last.slice(1).replace(/-/g, " ");
+  }
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/90 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/70 sm:px-4">
  <SidebarTrigger className="-ml-1 md:hidden" />
       <Breadcrumb className="min-w-0 flex-1">
         <BreadcrumbList>
-          <BreadcrumbItem className="hidden sm:block">
-            <BreadcrumbLink render={<Link href="/dashboard" />}>Home</BreadcrumbLink>
-          </BreadcrumbItem>
-          {!isRoot && <BreadcrumbSeparator className="hidden sm:block" />}
+          
           <BreadcrumbItem>
             <BreadcrumbPage className="truncate text-base font-semibold text-foreground">
               {title}
@@ -106,8 +109,8 @@ export function DashboardHeader() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <ThemeToggle />
-        <Separator orientation="vertical" className="mx-0.5 h-6" />
+       {/* <ThemeToggle />*/}
+       {/* <Separator orientation="vertical" className="mx-0.5 h-6" />*/}
         <UserMenu />
       </div>
     </header>

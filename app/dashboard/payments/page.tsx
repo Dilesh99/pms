@@ -7,11 +7,13 @@ import {
   CreditCard,
   DollarSign,
   Lock,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge, type Tone } from "@/components/dashboard/status-badge";
+import { Combobox } from "@/components/ui/combobox";
 import { Field } from "@/components/form/field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { currency, formatDate, invoices as seed } from "@/lib/data";
+import { currency, formatDate, invoices as seed, appointments } from "@/lib/data";
 import type { Invoice, InvoiceStatus } from "@/lib/types";
 
 const statusTone: Record<InvoiceStatus, Tone> = {
@@ -62,7 +64,9 @@ export default function PaymentsPage() {
 
   return (
     <div>
-      <PageHeader title="Payments" description="Review your invoices and settle bills securely online." />
+      <PageHeader title="Payments" description="Review your invoices and settle bills securely online.">
+        <AddPaymentDialog onAdd={(inv) => setList((prev) => [inv, ...prev])} />
+      </PageHeader>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <StatCard
@@ -260,6 +264,182 @@ function PaymentDialog({
           </Button>
         </DialogFooter>
       </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AddPaymentDialog({ onAdd }: { onAdd: (invoice: Invoice) => void }) {
+  const [open, setOpen] = useState(false);
+  
+  const [appointmentId, setAppointmentId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [name, setName] = useState("");
+  const [number, setNumber] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvv, setCvv] = useState("");
+  const [errors, setErrors] = useState<PayErrors & { amount?: string; appointment?: string }>({});
+
+  const appointmentOptions = appointments.map((a) => ({
+    value: a.id,
+    label: `${a.id} - ${a.doctor}`,
+    sublabel: `${a.date} at ${a.time}`,
+  }));
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const digits = number.replace(/\s/g, "");
+    const amountVal = parseFloat(amount);
+    
+    const next = {
+      appointment: appointmentId ? undefined : "Please select an appointment.",
+      amount: !isNaN(amountVal) && amountVal > 0 ? undefined : "Enter a valid amount.",
+      name: name.trim().length >= 2 ? undefined : "Enter the name on the card.",
+      number: /^\d{16}$/.test(digits) ? undefined : "Enter a valid 16-digit card number.",
+      expiry: /^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry) ? undefined : "Use MM/YY format.",
+      cvv: /^\d{3,4}$/.test(cvv) ? undefined : "Enter a 3–4 digit CVV.",
+    };
+    
+    setErrors(next);
+    if (Object.values(next).some(Boolean)) {
+      toast.error("Please check the payment details.");
+      return;
+    }
+    
+    const selectedAppt = appointments.find(a => a.id === appointmentId);
+    
+    const newInvoice: Invoice = {
+      id: `INV-${Math.floor(1000 + Math.random() * 9000)}`,
+      description: `Payment for appointment ${appointmentId} (${selectedAppt?.specialty})`,
+      amount: amountVal,
+      dueDate: new Date().toISOString().split("T")[0],
+      status: "paid",
+      method: `Card •••• ${digits.slice(-4)}`,
+    };
+    
+    onAdd(newInvoice);
+    toast.success("Payment added successfully!", { description: "The invoice has been created and marked as paid." });
+    setOpen(false);
+    
+    // Reset form
+    setAppointmentId("");
+    setAmount("");
+    setName("");
+    setNumber("");
+    setExpiry("");
+    setCvv("");
+    setErrors({});
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button className="gap-2"><Plus className="size-4"/>Add Payment</Button>} />
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add New Payment</DialogTitle>
+          <DialogDescription>
+            Select an appointment and enter payment details to create a new settled invoice.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={submit} noValidate className="space-y-4">
+          <Field name="appointment" label="Select Appointment" error={errors.appointment} required>
+            {() => (
+              <Combobox
+                options={appointmentOptions}
+                value={appointmentId}
+                onChange={setAppointmentId}
+                placeholder="Search appointments..."
+              />
+            )}
+          </Field>
+          
+          <Field name="amount" label="Amount (LKR)" error={errors.amount} required>
+            {(p) => (
+              <Input
+                {...p}
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="e.g. 5000"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            )}
+          </Field>
+          
+          {/* Card fields */}
+          <Field name="name" label="Name on card" error={errors.name} required>
+            {(p) => (
+              <Input
+                {...p}
+                autoComplete="cc-name"
+                placeholder="Amara Perez"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            )}
+          </Field>
+          <Field name="number" label="Card number" error={errors.number} required>
+            {(p) => (
+              <Input
+                {...p}
+                inputMode="numeric"
+                autoComplete="cc-number"
+                placeholder="4242 4242 4242 4242"
+                maxLength={19}
+                value={number}
+                onChange={(e) =>
+                  setNumber(
+                    e.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 16)
+                      .replace(/(\d{4})(?=\d)/g, "$1 "),
+                  )
+                }
+              />
+            )}
+          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field name="expiry" label="Expiry (MM/YY)" error={errors.expiry} required>
+              {(p) => (
+                <Input
+                  {...p}
+                  inputMode="numeric"
+                  autoComplete="cc-exp"
+                  placeholder="08/28"
+                  maxLength={5}
+                  value={expiry}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+                    setExpiry(v.length > 2 ? `${v.slice(0, 2)}/${v.slice(2)}` : v);
+                  }}
+                />
+              )}
+            </Field>
+            <Field name="cvv" label="CVV" error={errors.cvv} required>
+              {(p) => (
+                <Input
+                  {...p}
+                  inputMode="numeric"
+                  autoComplete="cc-csc"
+                  placeholder="123"
+                  maxLength={4}
+                  value={cvv}
+                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                />
+              )}
+            </Field>
+          </div>
+
+          <DialogFooter className="mt-4">
+            <DialogClose render={<Button type="button" variant="outline">Cancel</Button>} />
+            <Button type="submit">
+              <CreditCard className="size-4 mr-2" aria-hidden="true" />
+              Pay {amount ? currency(parseFloat(amount) || 0) : ""}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

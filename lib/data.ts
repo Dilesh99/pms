@@ -9,9 +9,9 @@ import type {
 } from "./types";
 
 export const BRAND = {
-  name: "CareBridge",
-  full: "CareBridge Health System",
-  tagline: "Compassionate care, connected.",
+  name: "HealthCare",
+  full: "Health Care System",
+  tagline: "Care for yourself.",
 };
 
 export const DEMO_USERS: Record<Role, User> = {
@@ -342,7 +342,7 @@ export const doctorSchedule = [
 ];
 
 export function currency(n: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+  return new Intl.NumberFormat("en-LK", { style: "currency", currency: "LKR" }).format(n);
 }
 
 export function formatDate(iso: string) {

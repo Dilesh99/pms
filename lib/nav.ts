@@ -68,21 +68,21 @@ const profile: NavItem = {
 };
 
 const navByRole: Record<Role, NavItem[]> = {
-  patient: [dashboard, appointments, records, prescriptions, labReports, payments, profile],
+  patient: [dashboard, appointments, records, /* prescriptions, labReports, */ payments, /*profile*/],
   doctor: [
     dashboard,
     { ...appointments, title: "Schedule", description: "Your consultation schedule" },
     records,
-    prescriptions,
-    labReports,
+    // prescriptions,
+    // labReports,
     profile,
   ],
   admin: [
     dashboard,
     appointments,
     records,
-    prescriptions,
-    labReports,
+    // prescriptions,
+    // labReports,
     { ...payments, title: "Billing", description: "Billing and revenue" },
     profile,
   ],

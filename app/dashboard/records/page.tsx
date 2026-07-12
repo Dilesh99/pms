@@ -5,6 +5,7 @@ import {
   Activity,
   CalendarDays,
   Download,
+  Eye,
   FileText,
   Search,
   Stethoscope,
@@ -14,12 +15,6 @@ import {
 import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatusBadge, type Tone } from "@/components/dashboard/status-badge";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,6 +26,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { formatDate, medicalRecords } from "@/lib/data";
 import type { MedicalRecord } from "@/lib/types";
 
@@ -47,6 +57,7 @@ const TYPES = ["all", "Consultation", "Diagnosis", "Vaccination", "Vitals"] as c
 export default function RecordsPage() {
   const [query, setQuery] = useState("");
   const [type, setType] = useState<(typeof TYPES)[number]>("all");
+  const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -67,10 +78,7 @@ export default function RecordsPage() {
         title="Medical Records"
         description="Your electronic health records from every visit, in one secure place."
       >
-        <Button variant="outline" onClick={() => toast.success("Full record exported as PDF (demo).")}>
-          <Download className="size-4" aria-hidden="true" />
-          Export all
-        </Button>
+        
       </PageHeader>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -108,88 +116,123 @@ export default function RecordsPage() {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="font-medium">No records found</p>
-            <p className="text-sm text-muted-foreground">Try adjusting your search or filter.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent>
-            <Accordion className="w-full">
-              {filtered.map((r) => {
-                const meta = typeMeta[r.type];
-                const Icon = meta.icon;
-                return (
-                  <AccordionItem key={r.id} value={r.id} className="border-b last:border-b-0">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex flex-1 items-start gap-3 text-left">
-                        <span
-                          className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
-                          aria-hidden="true"
-                        >
-                          <Icon className="size-4.5" />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-medium">{r.title}</span>
-                            <StatusBadge tone={meta.tone}>{r.type}</StatusBadge>
-                          </div>
-                          <p className="mt-0.5 truncate text-sm text-muted-foreground">{r.summary}</p>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="pl-12">
-                        <dl className="grid gap-3 sm:grid-cols-3">
-                          <div>
-                            <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                              <UserRound className="size-3.5" aria-hidden="true" /> Provider
-                            </dt>
-                            <dd className="text-sm font-medium">{r.provider}</dd>
-                          </div>
-                          <div>
-                            <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                              <FileText className="size-3.5" aria-hidden="true" /> Department
-                            </dt>
-                            <dd className="text-sm font-medium">{r.department}</dd>
-                          </div>
-                          <div>
-                            <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                              <CalendarDays className="size-3.5" aria-hidden="true" /> Date
-                            </dt>
-                            <dd className="text-sm font-medium">{formatDate(r.date)}</dd>
-                          </div>
-                        </dl>
-                        <h3 className="mt-4 text-sm font-semibold">Details</h3>
-                        <ul className="mt-2 space-y-1.5">
-                          {r.details.map((d) => (
-                            <li key={d} className="flex items-start gap-2 text-sm text-muted-foreground">
-                              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
-                              {d}
-                            </li>
-                          ))}
-                        </ul>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="mt-4"
-                          onClick={() => toast.success(`Record ${r.id} downloaded (demo).`)}
-                        >
-                          <Download className="size-4" aria-hidden="true" />
-                          Download record
-                        </Button>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                );
-              })}
-            </Accordion>
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardContent className="p-0">
+          {filtered.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="font-medium">No records found</p>
+              <p className="text-sm text-muted-foreground">Try adjusting your search or filter.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto p-5">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Provider</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((r) => {
+                    const meta = typeMeta[r.type];
+                    return (
+                      <TableRow key={r.id}>
+                        <TableCell className="whitespace-nowrap font-medium text-muted-foreground">
+                          {formatDate(r.date)}
+                        </TableCell>
+                        <TableCell className="font-medium">{r.title}</TableCell>
+                        <TableCell>
+                          <StatusBadge tone={meta.tone}>{r.type}</StatusBadge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{r.provider}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setSelectedRecord(r)}
+                            title="View Details"
+                          >
+                            <Eye className="size-4 text-primary" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Record Details Dialog */}
+      <Dialog open={!!selectedRecord} onOpenChange={(open) => !open && setSelectedRecord(null)}>
+        {selectedRecord && (
+          <DialogContent className="sm:max-w-xl">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
+                  <FileText className="size-5 text-primary" />
+                </span>
+                <div>
+                  <DialogTitle className="text-lg">{selectedRecord.title}</DialogTitle>
+                  <DialogDescription className="mt-0.5">
+                    {selectedRecord.summary}
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-6 pt-4">
+              <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3 rounded-lg bg-muted/50 p-4">
+                <div>
+                  <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <UserRound className="size-3.5" aria-hidden="true" /> Provider
+                  </dt>
+                  <dd className="mt-1 text-sm font-medium">{selectedRecord.provider}</dd>
+                </div>
+                <div>
+                  <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Activity className="size-3.5" aria-hidden="true" /> Department
+                  </dt>
+                  <dd className="mt-1 text-sm font-medium">{selectedRecord.department}</dd>
+                </div>
+                <div>
+                  <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <CalendarDays className="size-3.5" aria-hidden="true" /> Date
+                  </dt>
+                  <dd className="mt-1 text-sm font-medium">{formatDate(selectedRecord.date)}</dd>
+                </div>
+              </dl>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Clinical Details</h3>
+                <ul className="space-y-2">
+                  {selectedRecord.details.map((d, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                      <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                      {d}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="pt-2 border-t flex justify-end">
+                <Button
+                  onClick={() => toast.success(`Record ${selectedRecord.id} downloaded (demo).`)}
+                  className="gap-2"
+                >
+                  <Download className="size-4" aria-hidden="true" />
+                  Download Record
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 }

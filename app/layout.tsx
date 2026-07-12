@@ -52,7 +52,7 @@ export default function RootLayout({
                 Skip to main content
               </a>
               {children}
-              <Toaster position="top-right" richColors closeButton />
+              <Toaster position="top-center" richColors />
             </TooltipProvider>
           </SessionProvider>
         </ThemeProvider>

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
+  Building2,
   CalendarClock,
   CalendarPlus,
   Clock,
@@ -9,13 +10,17 @@ import {
   Stethoscope,
   Video,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatusBadge, type Tone } from "@/components/dashboard/status-badge";
 import { Field } from "@/components/form/field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogClose,
@@ -29,23 +34,22 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { appointments as seed, DEPARTMENTS, DOCTORS, formatDate } from "@/lib/data";
 import type { Appointment, AppointmentStatus } from "@/lib/types";
 import { validators } from "@/lib/validation";
 
-const TIME_SLOTS = ["09:00 AM", "10:30 AM", "11:45 AM", "02:00 PM", "03:30 PM", "04:15 PM"];
+const TIME_SLOTS = [
+  "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM",
+  "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
+  "12:00 PM", "01:00 PM", "01:30 PM", "02:00 PM",
+  "02:30 PM", "03:00 PM", "03:30 PM", "04:00 PM",
+  "04:30 PM", "05:00 PM",
+];
 
 const statusTone: Record<AppointmentStatus, Tone> = {
-  upcoming: "info",
+  upcoming:  "info",
   completed: "success",
   cancelled: "danger",
 };
@@ -56,7 +60,7 @@ export default function AppointmentsPage() {
 
   const grouped = useMemo(
     () => ({
-      upcoming: list.filter((a) => a.status === "upcoming"),
+      upcoming:  list.filter((a) => a.status === "upcoming"),
       completed: list.filter((a) => a.status === "completed"),
       cancelled: list.filter((a) => a.status === "cancelled"),
     }),
@@ -72,7 +76,7 @@ export default function AppointmentsPage() {
     setList((prev) => [appt, ...prev]);
     setOpen(false);
     toast.success("Appointment booked!", {
-      description: `${appt.doctor} · ${formatDate(appt.date)} at ${appt.time}`,
+      description: `${appt.doctor} &middot; ${formatDate(appt.date)} at ${appt.time}`,
     });
   }
 
@@ -88,12 +92,13 @@ export default function AppointmentsPage() {
               </Button>
             }
           />
-          <BookingDialog onBook={addAppointment} />
+          <BookingDialog onBook={addAppointment} appointments={list} />
         </Dialog>
       </PageHeader>
 
-      <Tabs defaultValue="upcoming" className="w-full">
+      <Tabs defaultValue="calendar" className="w-full">
         <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="calendar">Calendar</TabsTrigger>
           <TabsTrigger value="upcoming">Upcoming ({grouped.upcoming.length})</TabsTrigger>
           <TabsTrigger value="completed">Past ({grouped.completed.length})</TabsTrigger>
           <TabsTrigger value="cancelled">Cancelled ({grouped.cancelled.length})</TabsTrigger>
@@ -114,10 +119,16 @@ export default function AppointmentsPage() {
             )}
           </TabsContent>
         ))}
+
+        <TabsContent value="calendar" className="mt-4">
+          <CalendarView appointments={list} />
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
+
+/* ── Appointment card ─────────────────────────────────────────── */
 
 function AppointmentCard({
   appt,
@@ -129,7 +140,7 @@ function AppointmentCard({
   return (
     <Card>
       <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
           <span
             className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
             aria-hidden="true"
@@ -144,7 +155,7 @@ function AppointmentCard({
               </StatusBadge>
             </div>
             <p className="text-sm text-muted-foreground">
-              {appt.specialty} · {appt.department}
+              {appt.specialty} &middot; {appt.department}
             </p>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
@@ -190,7 +201,7 @@ function AppointmentCard({
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <DialogClose render={<Button variant="outline">Keep appointment</Button>} />
+                <DialogClose render={<Button type="button" variant="outline">Keep appointment</Button>} />
                 <DialogClose
                   render={
                     <Button variant="destructive" onClick={() => onCancel(appt.id)}>
@@ -206,6 +217,8 @@ function AppointmentCard({
     </Card>
   );
 }
+
+/* ── Empty state ──────────────────────────────────────────────── */
 
 function EmptyAppointments() {
   return (
@@ -225,25 +238,72 @@ function EmptyAppointments() {
   );
 }
 
+/* ── Booking dialog ───────────────────────────────────────────── */
+
 type BookingErrors = Partial<Record<"department" | "doctor" | "date" | "time" | "reason", string>>;
 
-function BookingDialog({ onBook }: { onBook: (a: Appointment) => void }) {
+const DEPT_OPTIONS = DEPARTMENTS.map((d) => ({ value: d, label: d }));
+const DOCTOR_OPTIONS = DOCTORS.map((d) => ({
+  value: d.name,
+  label: d.name,
+  sublabel: d.specialty,
+}));
+
+/** Convert a 12-h slot string like "02:30 PM" to minutes since midnight. */
+function slotToMinutes(slot: string): number {
+  const [timePart, period] = slot.split(" ");
+  const [h, m] = timePart.split(":").map(Number);
+  const hours24 = period === "PM" ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
+  return hours24 * 60 + m;
+}
+
+/** Return only future slots for today; all slots for future dates, excluding already booked slots. */
+function getAvailableSlots(selectedDate: string, appointments: Appointment[]) {
+  const today = new Date();
+  const todayStr = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  const bookedTimes = appointments
+    .filter((a) => a.date === selectedDate && a.status !== "cancelled")
+    .map((a) => a.time);
+
+  let slots = TIME_SLOTS;
+
+  if (selectedDate === todayStr) {
+    const nowMins = today.getHours() * 60 + today.getMinutes() + 30;
+    slots = slots.filter((t) => slotToMinutes(t) > nowMins);
+  }
+
+  return slots
+    .filter((t) => !bookedTimes.includes(t))
+    .map((t) => ({
+      value: t,
+      label: t,
+    }));
+}
+
+function BookingDialog({ onBook, appointments }: { onBook: (a: Appointment) => void; appointments: Appointment[] }) {
   const [department, setDepartment] = useState("");
-  const [doctor, setDoctor] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [mode, setMode] = useState<"In-person" | "Video">("In-person");
-  const [reason, setReason] = useState("");
-  const [errors, setErrors] = useState<BookingErrors>({});
+  const [doctor, setDoctor]         = useState("");
+  const [date, setDate]             = useState("");
+  const [time, setTime]             = useState("");
+  const [mode, setMode]             = useState<"In-person" | "Video">("In-person");
+  const [reason, setReason]         = useState("");
+  const [errors, setErrors]         = useState<BookingErrors>({});
+
+  const availableTimeOptions = useMemo(() => getAvailableSlots(date, appointments), [date, appointments]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const next: BookingErrors = {
       department: department ? undefined : "Please choose a department.",
-      doctor: doctor ? undefined : "Please choose a doctor.",
-      date: validators.required(date, "Date"),
-      time: time ? undefined : "Please choose a time slot.",
-      reason: validators.minLength(reason, 5, "Reason"),
+      doctor:     doctor     ? undefined : "Please choose a doctor.",
+      date:       validators.required(date, "Date"),
+      time:       time       ? undefined : "Please choose a time slot.",
+      reason:     reason     ? validators.minLength(reason, 5, "Reason") : undefined,
     };
     setErrors(next);
     if (Object.values(next).some(Boolean)) {
@@ -252,7 +312,7 @@ function BookingDialog({ onBook }: { onBook: (a: Appointment) => void }) {
     }
     const doc = DOCTORS.find((d) => d.name === doctor);
     onBook({
-      id: `APT-${Math.floor(5100 + reason.length * 7 + time.length)}`,
+      id:        `APT-${Math.floor(5100 + reason.length * 7 + time.length)}`,
       doctor,
       specialty: doc?.specialty ?? "General Medicine",
       department,
@@ -264,144 +324,174 @@ function BookingDialog({ onBook }: { onBook: (a: Appointment) => void }) {
     });
   }
 
+  function clearError(field: keyof BookingErrors) {
+    setErrors((e) => ({ ...e, [field]: undefined }));
+  }
+
   return (
-    <DialogContent className="sm:max-w-lg">
-      <DialogHeader>
-        <DialogTitle>Book an appointment</DialogTitle>
-        <DialogDescription>Choose a department, provider, and time that works for you.</DialogDescription>
+    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogHeader className="pb-2">
+        <div className="flex items-center gap-3">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
+            <CalendarPlus className="size-5 text-primary" />
+          </span>
+          <div>
+            <DialogTitle className="text-lg">Book an appointment</DialogTitle>
+            <DialogDescription className="mt-0.5">
+              Choose a provider, date, and time that works for you.
+            </DialogDescription>
+          </div>
+        </div>
       </DialogHeader>
 
-      <form onSubmit={submit} noValidate className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field name="department" label="Department" error={errors.department} required>
-            {(p) => (
-              <Select
-                value={department}
-                onValueChange={(v) => {
-                  setDepartment(v as string);
-                  setErrors((e) => ({ ...e, department: undefined }));
-                }}
-              >
-                <SelectTrigger id={p.id} aria-invalid={p["aria-invalid"]} aria-describedby={p["aria-describedby"]} className="w-full">
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DEPARTMENTS.map((d) => (
-                    <SelectItem key={d} value={d}>
-                      {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </Field>
+      <form onSubmit={submit} noValidate className="space-y-6 pt-2">
 
-          <Field name="doctor" label="Doctor" error={errors.doctor} required>
-            {(p) => (
-              <Select
-                value={doctor}
-                onValueChange={(v) => {
-                  setDoctor(v as string);
-                  setErrors((e) => ({ ...e, doctor: undefined }));
-                }}
-              >
-                <SelectTrigger id={p.id} aria-invalid={p["aria-invalid"]} aria-describedby={p["aria-describedby"]} className="w-full">
-                  <SelectValue placeholder="Select doctor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DOCTORS.map((d) => (
-                    <SelectItem key={d.name} value={d.name}>
-                      {d.name} — {d.specialty}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </Field>
+        {/* ── Section 1: Provider ── */}
+        <section>
+          <div className="mb-3 flex items-center gap-2">
+            <Building2 className="size-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">Provider</h3>
+            <div className="flex-1 border-t border-border/60" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field name="department" label="Department" error={errors.department} required>
+              {(p) => (
+                <Combobox
+                  id={p.id}
+                  aria-invalid={p["aria-invalid"]}
+                  aria-describedby={p["aria-describedby"]}
+                  options={DEPT_OPTIONS}
+                  value={department}
+                  onChange={(v) => { setDepartment(v); clearError("department"); }}
+                  placeholder="Search department..."
+                  searchPlaceholder="Type to search..."
+                />
+              )}
+            </Field>
 
-          <Field name="date" label="Preferred date" error={errors.date} required>
-            {(p) => (
-              <Input
-                {...p}
-                type="date"
-                min="2026-07-12"
-                value={date}
-                onChange={(e) => {
-                  setDate(e.target.value);
-                  setErrors((er) => ({ ...er, date: undefined }));
-                }}
-              />
-            )}
-          </Field>
+            <Field name="doctor" label="Doctor" error={errors.doctor} required>
+              {(p) => (
+                <Combobox
+                  id={p.id}
+                  aria-invalid={p["aria-invalid"]}
+                  aria-describedby={p["aria-describedby"]}
+                  options={DOCTOR_OPTIONS}
+                  value={doctor}
+                  onChange={(v) => { setDoctor(v); clearError("doctor"); }}
+                  placeholder="Search doctor..."
+                  searchPlaceholder="Type to search..."
+                />
+              )}
+            </Field>
+          </div>
+        </section>
 
-          <Field name="time" label="Time slot" error={errors.time} required>
-            {(p) => (
-              <Select
-                value={time}
-                onValueChange={(v) => {
-                  setTime(v as string);
-                  setErrors((e) => ({ ...e, time: undefined }));
-                }}
-              >
-                <SelectTrigger id={p.id} aria-invalid={p["aria-invalid"]} aria-describedby={p["aria-describedby"]} className="w-full">
-                  <SelectValue placeholder="Select time" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIME_SLOTS.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </Field>
-        </div>
+        {/* ── Section 2: Date & Time ── */}
+        <section>
+          <div className="mb-3 flex items-center gap-2">
+            <CalendarClock className="size-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">Date &amp; Time</h3>
+            <div className="flex-1 border-t border-border/60" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field name="date" label="Preferred date" error={errors.date} required>
+              {(p) => (
+                <Input
+                  {...p}
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={date}
+                  onChange={(e) => {
+                    setDate(e.target.value);
+                    setTime(""); // clear stale time whenever date changes
+                    clearError("date");
+                  }}
+                />
+              )}
+            </Field>
 
-        <fieldset>
-          <legend className="mb-2 text-sm font-medium">Appointment type</legend>
+            <Field name="time" label="Time slot" error={errors.time} required>
+              {(p) => (
+                <Combobox
+                  id={p.id}
+                  aria-invalid={p["aria-invalid"]}
+                  aria-describedby={p["aria-describedby"]}
+                  options={availableTimeOptions}
+                  value={time}
+                  onChange={(v) => { setTime(v); clearError("time"); }}
+                  placeholder={date ? "Select time..." : "Pick a date first"}
+                  searchPlaceholder="e.g. 10:00 AM"
+                  emptyText={date ? "No available slots for today." : "Select a date first."}
+                />
+              )}
+            </Field>
+          </div>
+        </section>
+
+        {/* ── Section 3: Appointment type ── */}
+        <section>
+          <div className="mb-3 flex items-center gap-2">
+            <Video className="size-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">Appointment type</h3>
+            <div className="flex-1 border-t border-border/60" />
+          </div>
           <RadioGroup
             value={mode}
             onValueChange={(v) => setMode(v as "In-person" | "Video")}
-            className="grid grid-cols-2 gap-2"
+            className="grid grid-cols-2 gap-3"
             aria-label="Appointment type"
           >
             {(["In-person", "Video"] as const).map((m) => (
               <Label
                 key={m}
                 htmlFor={`mode-${m}`}
-                className="flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm font-medium hover:bg-accent/60 has-data-[checked]:border-primary has-data-[checked]:bg-accent/60"
+                className="flex cursor-pointer items-center gap-3 rounded-xl border p-4 text-sm font-medium transition-all hover:bg-accent/60 has-data-[checked]:border-primary has-data-[checked]:bg-primary/5 has-data-[checked]:shadow-sm"
               >
                 <RadioGroupItem id={`mode-${m}`} value={m} />
-                {m === "Video" ? (
-                  <Video className="size-4 text-primary" aria-hidden="true" />
-                ) : (
-                  <MapPin className="size-4 text-primary" aria-hidden="true" />
-                )}
-                {m}
+                <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+                  {m === "Video" ? (
+                    <Video className="size-4 text-primary" aria-hidden="true" />
+                  ) : (
+                    <MapPin className="size-4 text-primary" aria-hidden="true" />
+                  )}
+                </span>
+                <div>
+                  <p className="font-semibold">{m}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {m === "Video" ? "Join via video call" : "Visit in clinic"}
+                  </p>
+                </div>
               </Label>
             ))}
           </RadioGroup>
-        </fieldset>
+        </section>
 
-        <Field name="reason" label="Reason for visit" error={errors.reason} required>
-          {(p) => (
-            <Textarea
-              {...p}
-              rows={3}
-              placeholder="Briefly describe your symptoms or the reason for this visit"
-              value={reason}
-              onChange={(e) => {
-                setReason(e.target.value);
-                if (e.target.value.trim().length >= 5) setErrors((er) => ({ ...er, reason: undefined }));
-              }}
-            />
-          )}
-        </Field>
+        {/* ── Section 4: Reason ── */}
+        <section>
+          <div className="mb-3 flex items-center gap-2">
+            <Stethoscope className="size-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">Visit details</h3>
+            <div className="flex-1 border-t border-border/60" />
+          </div>
+          <Field name="reason" label="Reason for visit" error={errors.reason}>
+            {(p) => (
+              <Textarea
+                {...p}
+                rows={3}
+                placeholder="Briefly describe your symptoms or the reason for this visit..."
+                value={reason}
+                onChange={(e) => {
+                  setReason(e.target.value);
+                  if (e.target.value.trim().length >= 5) clearError("reason");
+                }}
+              />
+            )}
+          </Field>
+        </section>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 pt-2 border-t border-border/60">
           <DialogClose render={<Button type="button" variant="outline">Cancel</Button>} />
-          <Button type="submit">
+          <Button type="submit" className="gap-2">
             <CalendarPlus className="size-4" aria-hidden="true" />
             Confirm booking
           </Button>
@@ -410,3 +500,89 @@ function BookingDialog({ onBook }: { onBook: (a: Appointment) => void }) {
     </DialogContent>
   );
 }
+
+/* ── Calendar View ────────────────────────────────────────────── */
+
+function CalendarView({ appointments }: { appointments: Appointment[] }) {
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
+
+  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const today = new Date();
+
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const blanks = Array.from({ length: firstDayOfMonth }, (_, i) => i);
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">
+            {currentDate.toLocaleString("default", { month: "long", year: "numeric" })}
+          </h2>
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" onClick={prevMonth}>
+              <ChevronLeft className="size-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={nextMonth}>
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg bg-border">
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+            <div key={day} className="bg-muted p-2 text-center text-sm font-medium text-muted-foreground">
+              {day}
+            </div>
+          ))}
+          
+          {blanks.map((_, i) => (
+            <div key={`blank-${i}`} className="min-h-[100px] bg-background p-2" />
+          ))}
+          
+          {days.map((day) => {
+            const dateStr = [
+              year,
+              String(month + 1).padStart(2, "0"),
+              String(day).padStart(2, "0"),
+            ].join("-");
+            
+            const dayAppts = appointments.filter((a) => a.date === dateStr && a.status !== "cancelled");
+            const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+            
+            return (
+              <div key={day} className="flex min-h-[100px] flex-col gap-1 border-t border-transparent bg-background p-2">
+                <span className={cn(
+                  "inline-flex size-6 items-center justify-center rounded-full text-sm",
+                  isToday ? "bg-primary font-semibold text-primary-foreground" : "font-medium text-muted-foreground"
+                )}>
+                  {day}
+                </span>
+                
+                <div className="mt-1 flex flex-col gap-1">
+                  {dayAppts.map((a) => (
+                    <div 
+                      key={a.id} 
+                      className="truncate rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary" 
+                      title={`${a.time} - ${a.doctor}`}
+                    >
+                      {a.time} {a.doctor.split(' ').pop()}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+

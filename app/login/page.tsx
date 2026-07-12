@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 
 const roleOptions: { value: Role; icon: typeof UserRound; label: string; gradient: string }[] = [
   { value: "patient", icon: UserRound, label: "Patient", gradient: "from-emerald-500 to-teal-600" },
-  { value: "doctor", icon: Stethoscope, label: "Doctor", gradient: "from-blue-500 to-indigo-600" },
+  /*{ value: "doctor", icon: Stethoscope, label: "Doctor", gradient: "from-blue-500 to-indigo-600" },*/
   { value: "admin", icon: Shield, label: "Admin", gradient: "from-violet-500 to-purple-600" },
 ];
 
@@ -114,7 +114,7 @@ export default function LoginPage() {
             </div>
           </fieldset>
 
-          {/* Demo autofill hint */}
+          {/* Demo autofill hint 
           <p className="login-demo-hint">
             Try demo:{" "}
             {roleOptions.map((opt, i) => (
@@ -131,7 +131,7 @@ export default function LoginPage() {
                 )}
               </span>
             ))}
-          </p>
+          </p>*/}
 
           {/* Email */}
           <div className="login-field">
