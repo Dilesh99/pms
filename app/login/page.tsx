@@ -11,6 +11,7 @@ import {
   Stethoscope,
   UserRound,
   HeartPulse,
+  StethoscopeIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="login-logo-area">
           <div className="login-logo-icon">
-            <HeartPulse className="size-7 text-white" aria-hidden="true" />
+             <StethoscopeIcon className="size-7 text-white" aria-hidden="true" />
           </div>
           <h1 className="login-brand">{BRAND.name}</h1>
           <p className="login-tagline">Welcome back! Please login to your account.</p>

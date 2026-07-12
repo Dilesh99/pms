@@ -1,4 +1,4 @@
-import { HeartPulse } from "lucide-react";
+import { StethoscopeIcon } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { BRAND } from "@/lib/data";
@@ -25,7 +25,7 @@ export function Logo({ href = "/", className, iconOnly, labelClassName }: LogoPr
         className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm"
         aria-hidden="true"
       >
-        <HeartPulse className="size-5" />
+        <StethoscopeIcon className="size-5" />
       </span>
       {!iconOnly && (
         <span className={cn("text-lg leading-none", labelClassName)}>
